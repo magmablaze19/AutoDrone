@@ -10,10 +10,11 @@
 ###################################################
 
 # Imports:
-from djitellopy import tello
-
+#from djitellopy import tello
+#from easytello import tello
+import DroneFlightController
 
 # Basic Test Code:
-drone = tello.Tello()
+drone = DroneFlightController.DroneFLightController()
 drone.takeoff()
 drone.land()
