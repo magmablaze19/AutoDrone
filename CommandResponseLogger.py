@@ -28,12 +28,20 @@ class CommandResponseLogger:
         self.log.append(new_event)
     
     # Add a response to the most recent command event in the event log
-    def log_reponse(self, response: str):
+    def log_response(self, response: str):
         self.log[-1].add_response(response)
 
     # Record a timeout for the most recent command event in the event log
     def log_time_out(self, time_out: bool):
         self.log[-1].update_time_out(time_out)
+
+    # Check whether a response has been received for most recent command
+    def got_response(self):
+        return self.log[-1].got_response()
+    
+    # Return the most recent response
+    def get_response(self):
+        return str(self.log[-1].get_response())
         
     # Save the log to a local file for analysis
     def save_log(self):

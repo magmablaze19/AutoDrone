@@ -15,6 +15,6 @@
 import DroneFlightController
 
 # Basic Test Code:
-drone = DroneFlightController.DroneFLightController()
+drone = DroneFlightController.DroneFlightController(True, True)
 drone.takeoff()
 drone.land()

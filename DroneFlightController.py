@@ -3,12 +3,16 @@
 #                                                 #
 #       Author: Alex Longo                        #
 #                                                 #
-#         Date: 3/6/2024                          #
+#  Last Update: 3/25/2024                         #
 #                                                 #
-#  Description: Main controller for conducting    #
-#               communication with drone. Sends   #
-#               and recieves data and provides    #
-#               methods for doing so.             #
+#  Description: Main flight controller for        #
+#               sending commands to the drone and #
+#               receiving responses from the      #
+#               drone. Serves as an interface for #
+#               the drone and provides methods    #
+#               for interacting with it. Also     #
+#               logs flight events using the      #
+#               CommandResponseLogger.            # 
 ###################################################
 
 # Required Imports
@@ -16,96 +20,122 @@ import socket
 import threading
 import time
 import cv2
+import CommandResponseLogger
 
-
-
-
-###############################################################
-#      EVERYTHING BELOW THIS STILL NEEDS EDITING              #
-###############################################################
-
-
-class DroneFLightController:
+class DroneFlightController:
     """  CLASS CONSTANTS  """
-    ################################################################################
-    TELLO_IP = '192.168.10.1'  # Tello IP address
-    TELLO_PORT = 8889          # Tello port number
-
-    LOCAL_IP = ''              # Local IP address
-    LOCAL_PORT = 8889          # Local port number
-
-
-    #################################################################################
-
+    # Tello IP address
+    TELLO_IP = '192.168.10.1'  
     
+    # Tello port number
+    TELLO_PORT = 8889         
+
+    # Local IP address
+    LOCAL_IP = ''
+
+    # Local port number              
+    LOCAL_PORT = 8889          
+
+    # Seconds until time out
+    MAX_TIME_OUT = 15.0
+
     
     def __init__(self, record_log: bool=True, show_log: bool=True):
 
         
-        # Opening local UDP port on 8889 for Drone communication
+        # Open local UDP port on 8889 for Drone communication
         self.local_ip = self.LOCAL_IP
         self.local_port = self.LOCAL_PORT
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((self.local_ip, self.local_port))
         
-        # Setting Drone ip and port info
+        # Set Drone ip and port info
         self.tello_ip = self.TELLO_IP
         self.tello_port = self.TELLO_PORT
         self.tello_address = (self.tello_ip, self.tello_port)
         
-        # Setting up potential query/response logging
+        # Set up potential query/response logging
         self.recording_log = record_log
         self.printing_log = show_log
-        self.log = []
+        self.logger = CommandResponseLogger.CommandResponseLogger()
 
-        # Intializing response thread
+        # Intialize response thread
+        self.received_response_to_cur_cmd = False
         self.receive_thread = threading.Thread(target=self._receive_thread)
         self.receive_thread.daemon = True
         self.receive_thread.start()
 
-        # easyTello runtime options
+        """[START NEEDS EDITING]"""
+        # Runtime options 
         self.stream_state = False
         self.last_frame = None
         self.MAX_TIME_OUT = 15.0
-        self.debug = debug
+        """[END NEEDS EDITING]"""
+        
         # Setting Tello to command mode
         self.command()
 
+
+    # Send commands to drone
     def send_command(self, command: str, query: bool =False):
+        # Re-initialize received_response variable
+        self.received_response_to_cur_cmd = False
+        
         # Log command if necessary
         if (self.recording_log):
-            self.log.append("")
-        
-        # New log entry created for the outbound command
-        #self.log.append("Kaboom")
-
-        # Sending command to Tello
-        self.socket.sendto(command.encode('utf-8'), self.tello_address)
-        # Displaying conformation message (if 'debug' os True)
-        #if self.debug is True:
-        #    print('Sending command: {}'.format(command))
+            self.logger.log_command(command)
+        # Display command confirmation if necessary
+        if (self.printing_log):
+            print("\nSending command: " + command + " \n")
             
+        # Send command to Drone
+        self.socket.sendto(command.encode('utf-8'), self.tello_address)
+        
         # Checking whether the command has timed out or not (based on value in 'MAX_TIME_OUT')
-        # start = time.time()
-        # while not self.log[-1].got_response():  # Runs while no repsonse has been received in log
-        #     now = time.time()
-        #     difference = now - start
-        #     if difference > self.MAX_TIME_OUT:
-        #         print('Connection timed out!')
-        #         break
-        # Prints out Tello response (if 'debug' is True)
-        #if self.debug is True and query is False:
-            #print('Response: {}'.format(self.log[-1].get_response()))
+        start = time.time()
+        while not self.logger.got_response():  # Runs while no repsonse has been received in log
+             now = time.time()
+             difference = now - start
+             if difference > self.MAX_TIME_OUT:
+                 self.logger.log_time_out(True)
+                 if (self.printing_log):
+                    print('\nConnection timed out! \n')
+                 break
+             
+        # Response logged if necessary by receive thread
+        # Display response confirmation if necessary
+        if (self.printing_log):
+            print("\nReceived response: " + self.logger.get_response() + " \n")
 
+
+    # Constantly check for drone responses
     def _receive_thread(self):
         while True:
             # Checking for Tello response, throws socket error
             try:
+                # Empty old response field
+                self.response = None
+                # Try to grab a response
                 self.response, ip = self.socket.recvfrom(1024)
-                self.log[-1].add_response(self.response)
+                # Check if reponse was received
+                if(self.response is None):
+                    self.received_response_to_cur_cmd = False
+                else:
+                    # Log response if logging
+                    if(self.recording_log):
+                        self.logger.log_response(self.response)
+                    # Set received response flag to true
+                    self.received_response_to_cur_cmd = True
+            # Catch any socket errors
             except socket.error as exc:
                 print('Socket error: {}'.format(exc))
+
+
+    ###############################################################
+    #      EVERYTHING BELOW THIS STILL NEEDS EDITING              #
+    ###############################################################
+
 
     def _video_thread(self):
         # Creating stream capture object
@@ -131,12 +161,12 @@ class DroneFLightController:
         # Delay is activated
         time.sleep(delay)
     
+    
     def get_log(self):
         return self.log
     
     def close(self):
         self.socket.close()
-
 
 
     """ CONTROL COMMANDS """
@@ -163,7 +193,3 @@ class DroneFLightController:
     def emergency(self):
         self.send_command('emergency')
     
-
-
-    """ LOG COMMANDS """
-
