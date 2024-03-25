@@ -1,7 +1,7 @@
 # Autonmous Quadcopter
 A small-scale autonomous drone that uses camera data and visual odometry algorithms for indoor navigation. Our goal is to develop a computationally-lightweight system that will allow the drone to operate autonomously using solely its on-board computing resources.  
   
-**Note: Not under active development**  
+**Note: Under active development**  
   
 ### Hardware
 Ryze Tello Drone (https://www.ryzerobotics.com/tello)  
