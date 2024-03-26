@@ -61,17 +61,16 @@ class DroneFlightController:
         self.logger = CommandResponseLogger.CommandResponseLogger()
 
         # Intialize response thread
+        self.response = None
         self.received_response_to_cur_cmd = False
+        self.last_known_response = None
         self.receive_thread = threading.Thread(target=self._receive_thread)
         self.receive_thread.daemon = True
         self.receive_thread.start()
 
-        """[START NEEDS EDITING]"""
         # Runtime options 
         self.stream_state = False
         self.last_frame = None
-        self.MAX_TIME_OUT = 15.0
-        """[END NEEDS EDITING]"""
         
         # Setting Tello to command mode
         self.command()
@@ -94,7 +93,7 @@ class DroneFlightController:
         
         # Checking whether the command has timed out or not (based on value in 'MAX_TIME_OUT')
         start = time.time()
-        while not self.logger.got_response():  # Runs while no repsonse has been received in log
+        while not self.received_response_to_cur_cmd:  # Runs while no repsonse has been received in log
              now = time.time()
              difference = now - start
              if difference > self.MAX_TIME_OUT:
@@ -125,6 +124,8 @@ class DroneFlightController:
                     # Log response if logging
                     if(self.recording_log):
                         self.logger.log_response(self.response)
+                    # Set lastknown response
+                    self.last_known_response = self.response
                     # Set received response flag to true
                     self.received_response_to_cur_cmd = True
             # Catch any socket errors
@@ -132,19 +133,14 @@ class DroneFlightController:
                 print('Socket error: {}'.format(exc))
 
 
-    ###############################################################
-    #      EVERYTHING BELOW THIS STILL NEEDS EDITING              #
-    ###############################################################
-
-
+    # Capture drone video
     def _video_thread(self):
         # Creating stream capture object
-        cap = cv2.VideoCapture('udp://'+self.tello_ip+':11111')
+        cap = cv2.VideoCapture('udp://'+self.tello_ip+':11111')  
         # Runs while 'stream_state' is True
         while self.stream_state:
             ret, self.last_frame = cap.read()
             cv2.imshow('DJI Tello', self.last_frame)
-
             # Video Stream is closed if escape key is pressed
             k = cv2.waitKey(1) & 0xFF
             if k == 27:
@@ -152,33 +148,48 @@ class DroneFlightController:
         cap.release()
         cv2.destroyAllWindows()
     
+
+    # Pause commands for specified number of seconds
     def wait(self, delay: float):
-        # Displaying wait message (if 'debug' is True)
-        if self.debug is True:
-            print('Waiting {} seconds...'.format(delay))
-        # Log entry for delay added
-        self.log.append("Wait")
-        # Delay is activated
+        # Log event if necesary        
+        if(self.recording_log):
+            self.logger.log_command("Wait " + str(delay) + " seconds")
+        
+        # Display wait confirmation if necessary
+        if(self.printing_log):
+            print("Initiated wait " + str(delay) + " seconds")
+        
+        # Activate delay
         time.sleep(delay)
     
-    
+
+    # Return the CommandResponseLogger
     def get_log(self):
-        return self.log
+        return self.logger
+
+    # Save the log file
+    def save_log(self):
+        self.logger.save_log()
     
+    # Close the socket
     def close(self):
         self.socket.close()
 
 
     """ CONTROL COMMANDS """
+    # Put the drone in command mode
     def command(self):
         self.send_command('command')
     
+    # Initiate auto-takeoff
     def takeoff(self):
         self.send_command('takeoff')
 
+    # Initiate auto-land
     def land(self):
         self.send_command('land')
 
+    # Begin streaming video
     def streamon(self):
         self.send_command('streamon')
         self.stream_state = True
@@ -186,10 +197,119 @@ class DroneFlightController:
         self.video_thread.daemon = True
         self.video_thread.start()
 
+    # End streaming video
     def streamoff(self):
         self.stream_state = False
         self.send_command('streamoff')
 
+    # Stop all motors immediately
     def emergency(self):
         self.send_command('emergency')
+
+
+    """ DRONE MOVEMENT COMMANDS """
+    # Fly up with dist cm (20-500)
+    def up(self, dist: int):
+        self.send_command("up " + str(dist))
+
+    # Fly down with dist cm (20-500)
+    def down(self, dist: int):
+        self.send_command("down " + str(dist))
+
+    # Fly left with dist cm (20-500)
+    def left(self, dist: int):
+        self.send_command("left " + str(dist))
+
+    # Fly right with dist cm (20-500)
+    def right(self, dist: int):
+        self.send_command("right " + str(dist))
     
+    # Fly forward with dist cm (20-500)
+    def forward(self, dist: int):
+        self.send_command("forward " + str(dist))
+
+    # Fly back with dist cm (20-500)
+    def back(self, dist: int):
+        self.send_command("back " + str(dist))
+
+    # Rotate degr degrees clockwise (1-3600)
+    def cw(self, degr: int):
+        self.send_command("cw " + str(degr))
+    
+    # Rotate degr degrees counter clockwise (1-3600)
+    def ccw(self, degr: int):
+        self.send_command("ccw " + str(degr))
+
+    # Execute flip in direction (l, r, f, b)
+    def flip(self, direc: str):
+        self.send_command("flip " + direc)
+
+    # Go to a coordinate at a specified speed. x: 20-500  y: 20-500  z: 20-500  speed: 10-100
+    def go(self, x: int, y: int, z: int, speed: int):
+        self.send_command("go " + str(x) + " " + str(y) + " " + str(z) + " " + str(speed))
+
+
+    """ SET COMMANDS """
+    # Set drone speed to speed cm/s (10-100)
+    def set_speed(self, speed: int):
+        self.send_command("speed " + str(speed))
+
+    # Send RC control via four channels. a: left/right (-100~100)  b: forward/backward (-100~100)  c: up/down (-100~100)  d: yaw (-100~100)
+    def rc_control(self, a: int, b: int, c: int, d: int):
+        self.send_command("rc " + str(a) + " " + str(b) + " " + str(c) + " " + str(d))
+
+    # Set Wifi SSID and password
+    def set_wifi(self, ssid: str, password: str):
+        self.send_command("wifi " + ssid + " " + password)
+    
+
+    """ READ COMMANDS """
+    # Get current speed (cm/s)
+    def get_speed(self):
+        self.send_command('speed?', True)
+        return str(self.last_known_response)
+
+    # Get current battery percentage (0-100 %)
+    def get_battery(self):
+        self.send_command('battery?', True)
+        return str(self.last_known_response)
+
+    # Get current fly time (seconds) 
+    def get_time(self):
+        self.send_command('time?', True)
+        return str(self.last_known_response)
+
+    # Get height (cm) 
+    def get_height(self):
+        self.send_command('height?', True)
+        return str(self.last_known_response)
+    
+    # Get temperature (℃) 
+    def get_temp(self):
+        self.send_command('temp?', True)
+        return str(self.last_known_response)
+
+    # Get IMU attitude data (pitch, roll, yaw)
+    def get_attitude(self):
+        self.send_command('attitude?', True)
+        return str(self.last_known_response)
+
+    # Get barometer value (m)
+    def get_baro(self):
+        self.send_command('baro?', True)
+        return str(self.last_known_response)
+
+    # Get IMU angular acceleration data (0.001g)
+    def get_acceleration(self):
+        self.send_command('acceleration?', True)
+        return str(self.last_known_response)
+    
+    # Get distance value from TOF（cm）
+    def get_tof(self):
+        self.send_command('tof?', True)
+        return str(self.last_known_response)
+
+    # Get Wi-Fi SNR
+    def get_wifi(self):
+        self.send_command('wifi?', True)
+        return str(self.last_known_response)
