@@ -61,6 +61,7 @@ class DroneFlightController:
         self.logger = CommandResponseLogger.CommandResponseLogger()
 
         # Intialize response thread
+        self.last_known_command = "None"
         self.response = None
         self.received_response_to_cur_cmd = False
         self.last_known_response = None
@@ -90,6 +91,9 @@ class DroneFlightController:
             
         # Send command to Drone
         self.socket.sendto(command.encode('utf-8'), self.tello_address)
+
+        # Update last known command
+        self.last_known_command = command
         
         # Checking whether the command has timed out or not (based on value in 'MAX_TIME_OUT')
         start = time.time()
@@ -105,7 +109,9 @@ class DroneFlightController:
         # Response logged if necessary by receive thread
         # Display response confirmation if necessary
         if (self.printing_log):
-            print("\nReceived response: " + self.logger.get_response() + " \n")
+            #print("\nReceived response: " + self.logger.get_response() + " \n")
+            processed_response = self.process_response()
+            print("\nReceived response: " + processed_response + " \n")
 
 
     # Constantly check for drone responses
@@ -121,13 +127,14 @@ class DroneFlightController:
                 if(self.response is None):
                     self.received_response_to_cur_cmd = False
                 else:
-                    # Log response if logging
-                    if(self.recording_log):
-                        self.logger.log_response(self.response)
                     # Set lastknown response
-                    self.last_known_response = self.response
+                    self.last_known_response = str(self.response)
                     # Set received response flag to true
                     self.received_response_to_cur_cmd = True
+                    # Log response if logging
+                    if(self.recording_log):
+                        processed_response = self.process_response()
+                        self.logger.log_response(processed_response)
             # Catch any socket errors
             except socket.error as exc:
                 print('Socket error: {}'.format(exc))
@@ -292,7 +299,7 @@ class DroneFlightController:
     # Get IMU attitude data (pitch, roll, yaw)
     def get_attitude(self):
         self.send_command('attitude?', True)
-        return str(self.last_known_response)
+        return self.attitude_response()
 
     # Get barometer value (m)
     def get_baro(self):
@@ -313,3 +320,51 @@ class DroneFlightController:
     def get_wifi(self):
         self.send_command('wifi?', True)
         return str(self.last_known_response)
+    
+
+    """ PROCESS DRONE RESPONSES """
+    # Correctly process response
+    def process_response(self):
+        if 'attitude?' in self.last_known_command:
+            return str(self.attitude_response())
+        elif 'acceleration?' in self.last_known_command:
+            return str(self.acceleration_response())
+        elif 'temp?' in self.last_known_command:
+            return str(self.temp_response())
+        elif 'baro?' in self.last_known_command or 'speed?' in self.last_known_command:
+            return str(self.float_response(self.last_known_response))
+        elif '?' not in self.last_known_command:
+            return str(self.last_known_response)
+        else:
+            return str(self.int_response(self.last_known_response))
+    
+    # Process a numeric response
+    def numeric_response(self, data: str):
+        num_val = ''.join(i for i in data if i.isdigit() or i=='-' or i=='.')
+        return num_val
+
+    # Process an integer response
+    def int_response(self, data: str):
+        return int(self.numeric_response(data))
+
+    # Process a float response
+    def float_response(self, data: str):
+        return float(self.numeric_response(data))
+    
+    # Process an attitude rsponse
+    def attitude_response(self):
+        raw_att = self.last_known_response.split(';')
+        att_data = (self.int_response(raw_att[0]), self.int_response(raw_att[1]), self.int_response(raw_att[2]))
+        return att_data
+    
+    # Process an acceleration response
+    def acceleration_response(self):
+        raw_acc = self.last_known_response.split(';')
+        acc_data = (self.float_response(raw_acc[0]), self.float_response(raw_acc[1]), self.float_response(raw_acc[2]))
+        return acc_data
+
+    # Process a temperature response
+    def temp_response(self):
+        raw_temp = self.last_known_response.split('~')
+        temp = (self.int_response(raw_temp[0]) + self.int_response(raw_temp[1]))/2
+        return temp

@@ -1,128 +1,48 @@
 Event ID: 0
 Command: command
 Response: b'ok'
-Command Sent Time: 2024-03-25 22:55:29.438834
-Response Received Time: 2024-03-25 22:55:29.465832
-Latency: 0.026998
+Command Sent Time: 2024-03-27 16:22:04.683083
+Response Received Time: 2024-03-27 16:22:04.724077
+Latency: 0.040994
 Time Out Occurred: No
 
 Event ID: 1
 Command: takeoff
 Response: b'ok'
-Command Sent Time: 2024-03-25 22:55:29.466830
-Response Received Time: 2024-03-25 22:55:38.197826
-Latency: 8.730996
+Command Sent Time: 2024-03-27 16:22:04.725087
+Response Received Time: 2024-03-27 16:22:09.783081
+Latency: 5.057994
 Time Out Occurred: No
 
 Event ID: 2
-Command: Wait 5 seconds
+Command: Wait 2 seconds
 Response: None
-Command Sent Time: 2024-03-25 22:55:38.198881
+Command Sent Time: 2024-03-27 16:22:09.784082
 Response Received Time: N/A
 Latency: N/A
 Time Out Occurred: No
 
 Event ID: 3
-Command: streamon
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:55:43.199919
-Response Received Time: 2024-03-25 22:55:43.257849
-Latency: 0.05793
+Command: attitude?
+Response: (0, 0, 3)
+Command Sent Time: 2024-03-27 16:22:11.785423
+Response Received Time: 2024-03-27 16:22:11.813848
+Latency: 0.028425
 Time Out Occurred: No
 
 Event ID: 4
-Command: Wait 5 seconds
+Command: Wait 2 seconds
 Response: None
-Command Sent Time: 2024-03-25 22:55:43.259849
+Command Sent Time: 2024-03-27 16:22:11.814845
 Response Received Time: N/A
 Latency: N/A
 Time Out Occurred: No
 
 Event ID: 5
-Command: cw 90
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:55:48.260448
-Response Received Time: 2024-03-25 22:55:50.487455
-Latency: 2.227007
-Time Out Occurred: No
-
-Event ID: 6
-Command: Wait 5 seconds
-Response: None
-Command Sent Time: 2024-03-25 22:55:50.488450
-Response Received Time: N/A
-Latency: N/A
-Time Out Occurred: No
-
-Event ID: 7
-Command: ccw 180
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:55:55.489273
-Response Received Time: 2024-03-25 22:55:59.219523
-Latency: 3.73025
-Time Out Occurred: No
-
-Event ID: 8
-Command: Wait 5 seconds
-Response: None
-Command Sent Time: 2024-03-25 22:55:59.220517
-Response Received Time: N/A
-Latency: N/A
-Time Out Occurred: No
-
-Event ID: 9
-Command: cw 90
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:56:04.221674
-Response Received Time: 2024-03-25 22:56:06.491571
-Latency: 2.269897
-Time Out Occurred: No
-
-Event ID: 10
-Command: Wait 5 seconds
-Response: None
-Command Sent Time: 2024-03-25 22:56:06.491571
-Response Received Time: N/A
-Latency: N/A
-Time Out Occurred: No
-
-Event ID: 11
-Command: up 30
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:56:11.493991
-Response Received Time: 2024-03-25 22:56:13.538891
-Latency: 2.0449
-Time Out Occurred: No
-
-Event ID: 12
-Command: Wait 5 seconds
-Response: None
-Command Sent Time: 2024-03-25 22:56:13.539888
-Response Received Time: N/A
-Latency: N/A
-Time Out Occurred: No
-
-Event ID: 13
-Command: down 30
-Response: b'ok'
-Command Sent Time: 2024-03-25 22:56:18.540531
-Response Received Time: 2024-03-25 22:56:20.690449
-Latency: 2.149918
-Time Out Occurred: No
-
-Event ID: 14
-Command: Wait 5 seconds
-Response: None
-Command Sent Time: 2024-03-25 22:56:20.690449
-Response Received Time: N/A
-Latency: N/A
-Time Out Occurred: No
-
-Event ID: 15
 Command: land
 Response: b'ok'
-Command Sent Time: 2024-03-25 22:56:25.691746
-Response Received Time: 2024-03-25 22:56:28.297777
-Latency: 2.606031
+Command Sent Time: 2024-03-27 16:22:13.816125
+Response Received Time: 2024-03-27 16:22:17.488023
+Latency: 3.671898
 Time Out Occurred: No
 

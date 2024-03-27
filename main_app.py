@@ -17,18 +17,13 @@ import DroneFlightController
 # Basic Test Code:
 drone = DroneFlightController.DroneFlightController(True, True)
 drone.takeoff()
-drone.wait(5)
-drone.streamon()
-drone.wait(5)
-drone.cw(90)
-drone.wait(5)
-drone.ccw(180)
-drone.wait(5)
-drone.cw(90)
-drone.wait(5)
-drone.up(30)
-drone.wait(5)
-drone.down(30)
-drone.wait(5)
+drone.wait(2)
+
+
+attitude = drone.get_attitude()
+print(attitude)
+
+
+drone.wait(2)
 drone.land()
 drone.save_log()
