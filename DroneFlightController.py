@@ -269,6 +269,10 @@ class DroneFlightController:
     def set_wifi(self, ssid: str, password: str):
         self.send_command("wifi " + ssid + " " + password)
     
+    # Set BitRate
+    def set_bit_rate(self, speed: int):
+        self.send_command("bitrate " + str(speed))
+    
 
     """ READ COMMANDS """
     # Get current speed (cm/s)
