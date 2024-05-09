@@ -10,3 +10,11 @@ Ryze Tello Drone (https://www.ryzerobotics.com/tello)
 Alex Longo (https://github.com/BlockadeRunner)  
 Alex Passin (https://github.com/magmablaze19)  
 Jake Richardson (https://github.com/jtrichWM)  
+
+### File Descriptions:
+_main_app.py_ ~ Main script used for conducting payload testing. Script uses the DroneFlightController class to establish a connection and interface with the drone. Then it tells the drone to takeoff, fly five feet forward, turn 90 deg to the right, fly three feet forward, and land.
+
+_DroneFlightController.py_ ~ Main flight controller for sending commands to the drone and receiving responses from the drone. Serves as an interface for the drone and provides methods for interacting with it. Also logs flight events using CommandResponseLogger.py
+
+**CommandResponseLogger.py** ~ Logger for the drone's flight controller. Logs commands sent to the drone and responses received from the drone, as well as the latency between the two. Stores commands in a python list that can be accessed later.
+
