@@ -1,4 +1,4 @@
-# Autonmous Quadcopter
+# Autonmous Drone
 A small-scale autonomous drone that uses camera data and visual odometry algorithms for indoor navigation. Our goal is to develop a computationally-lightweight system that will allow the drone to operate autonomously using solely its on-board computing resources.  
   
 **Please Note: This is still under active development**  
