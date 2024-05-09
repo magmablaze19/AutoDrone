@@ -18,3 +18,4 @@ Jake Richardson (https://github.com/jtrichWM)
 
 **CommandResponseLogger.py** ~ Logger for the drone's flight controller. Logs commands sent to the drone and responses received from the drone, as well as the latency between the two. Stores commands in a python list that can be accessed later.
 
+_rpg_svo_ ~ Files for testing and implementing a pre-existing visual odometry algorithm.
